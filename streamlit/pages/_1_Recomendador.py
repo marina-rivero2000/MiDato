@@ -122,6 +122,8 @@ def recomendar():
 
 st.subheader("📁 Cargar archivos CSV de ventas y artículos")
 
+mensaje = st.empty()
+
 archivo_ventas = st.sidebar.file_uploader("Sube archivo CSV de ventas", type=["csv"], key="ventas")
 archivo_articulos = st.sidebar.file_uploader("Sube archivo CSV de artículos", type=["csv"], key="articulos")
 
@@ -133,16 +135,16 @@ if archivo_ventas is not None and archivo_articulos is not None:
         articulos_df = pd.read_csv(archivo_articulos, usecols=['Codigo_Art', 'Familia'])
         ventas = cargar_datos(ventas_df, articulos_df)
 
-        st.success("✅ Archivos cargados y procesados correctamente.")
+        mensaje.success("✅ Archivos cargados y procesados correctamente.")
 
     except Exception as e:
-        st.error(f"❌ Error al leer o procesar los archivos: {e}")
-        st.stop()
-
+        mensaje.error(f"❌ Error al leer o procesar los archivos: {e}")
+    
 else:
-    st.info("⚠️ Por favor, sube ambos archivos CSV para continuar.")
+    mensaje.info("⚠️ Por favor, sube ambos archivos CSV para continuar.")
+    
+if ventas is None:
     st.stop()
-
 # Aquí continúa el resto del código con `ventas` ya cargado y listo para usar
 
 

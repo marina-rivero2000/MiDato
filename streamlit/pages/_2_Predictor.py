@@ -98,20 +98,24 @@ st.markdown(f"""
 
 st.subheader("📁 Cargar archivo de ventas")
 
+mensaje = st.empty()
+
+ventas_df = None
+
 archivo_cargado = st.sidebar.file_uploader("Sube un archivo CSV con datos de ventas", type=["csv"])
 
 if archivo_cargado is not None:
     try:
         ventas_df = pd.read_csv(archivo_cargado, parse_dates=['Mes_Año'])
         ventas_df = preparar_datos(ventas_df)
-        st.success("✅ Archivo cargado correctamente.")
+        mensaje.success("✅ Archivo cargado correctamente.")
     except Exception as e:
-        st.error(f"❌ Error al leer el archivo: {e}")
-        st.stop()
+        mensaje.error(f"❌ Error al leer el archivo: {e}")
 else:
-    st.info("⚠️ Por favor, sube un archivo CSV para continuar.")
-    st.stop()
+    mensaje.info("⚠️ Por favor, sube un archivo CSV para continuar.")
 
+if ventas_df is None:
+    st.stop()  # Detener la ejecución si no hay datos cargados
 
 
 # --- Inicializar estado para selecciones si no existen ---
