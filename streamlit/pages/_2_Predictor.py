@@ -5,6 +5,7 @@ import datetime
 from PIL import Image
 import base64
 from io import BytesIO
+import os
 from models.modelo_predictivo import preparar_datos, predecir
 
 # Configuración de la página
@@ -49,7 +50,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Cargar imagen y convertirla a base64
-def get_base64_image(image_path):
+def get_base64_image(image_name):
+    # Obtener la ruta absoluta basada en la ubicación real de app.py
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    image_path = os.path.join(script_dir, image_name)
+
+    # Abrir y convertir la imagen
     img = Image.open(image_path)
     buffer = BytesIO()
     img.save(buffer, format="PNG")
