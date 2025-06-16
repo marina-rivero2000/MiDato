@@ -1,18 +1,26 @@
+# Librerias
 import pandas as pd
 import numpy as np
 from prophet import Prophet
+from pmdarima import auto_arima
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-#import pmdarima as pm
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import matplotlib.pyplot as plt
 
 
 # Cargar los datos
+# def cargar_datos(ventas):
+#     # Cargar las ventas
+#      ventas = pd.read_csv(url, parse_dates=['Mes_Año'])
+#     # Transformar la columna 'Mes_Año' en índice
+#     ventas.set_index('Mes_Año', inplace=True)
+#     # Eliminar las ventas que no tienen código o descripción
+#     ventas = ventas.dropna(subset=['Descripcion_Art', 'Codigo_Art'])
+#     return ventas
+
 def preparar_datos(ventas):
-    # Cargar las ventas
-    # ventas = pd.read_csv(url, parse_dates=['Mes_Año'])
     # Transformar la columna 'Mes_Año' en índice
     ventas.set_index('Mes_Año', inplace=True)
     # Eliminar las ventas que no tienen código o descripción
@@ -86,7 +94,20 @@ def predecir_prophet(modelo_pro, test):
     pred_pro, ci_pro = fc_pro['yhat'], fc_pro[['yhat_lower','yhat_upper']]
     return pred_pro,ci_pro
 
-def entrenar_sarima(train, order=(0,1,1), seasonal_order=(0,0,0,12)):
+def obtener_mejor_arima(train, regresores=None, seasonal=True, m=12):
+    if regresores is not None:
+        modelo = auto_arima(train['Cantidad'], exogenous=train[regresores],
+                            seasonal=seasonal, m=m,
+                            stepwise=True, suppress_warnings=True,
+                            error_action='ignore', trace=False)
+    else:
+        modelo = auto_arima(train, seasonal=seasonal, m=m,
+                            stepwise=True, suppress_warnings=True,
+                            error_action='ignore', trace=False)
+    return modelo.order, modelo.seasonal_order
+
+def entrenar_sarima(train):
+    order, seasonal_order = obtener_mejor_arima(train)
     modelo_sarima = SARIMAX(train, order=order, r=seasonal_order, enforce_stationarity=False, enforce_invertibility=False)
     modelo_sarima = modelo_sarima.fit(disp=False)
     return modelo_sarima
@@ -124,7 +145,8 @@ def predecir_prophet_regresores(modelo_pro_regr, test, regresores):
     ci_pro_regr = fc_pro_regr[['yhat_lower', 'yhat_upper']]
     return pred_pro_regr, ci_pro_regr
 
-def entrenar_sarima_regresores(train, regresores, order=(0,1,1), seasonal_order=(1,0,0,12)):
+def entrenar_sarima_regresores(train, regresores):
+    order, seasonal_order = obtener_mejor_arima(train, regresores=regresores)
     modelo_sarima_regr = SARIMAX(train['Cantidad'], exog=train[regresores],
                      order=order, seasonal_order=seasonal_order,
                      enforce_stationarity=False, enforce_invertibility=False)
@@ -137,11 +159,8 @@ def predecir_sarima_regresores(modelo_sarima_regr, test, regresores):
     ci_sarima_regr = fc_sarima_regr.conf_int(alpha=0.05)
     return pred_sarima_regr, ci_sarima_regr
 
+# Evaluar y seleccionar el mejor modelo
 def evaluar_y_seleccionar_mejor_modelo_completo(modelos):
-    """
-    Evalúa los modelos usando MAE, RMSE y amplitud promedio del intervalo de confianza.
-    Cada modelo debe ser una tupla: (nombre, pred, ci, test_df, columna_real)
-    """
     resultados = []
     print("Evaluación de Modelos:")
     
@@ -183,19 +202,6 @@ def evaluar_y_seleccionar_mejor_modelo_completo(modelos):
     mejor_ci = mejor_fila['ci']
     return mejor_modelo, mejor_pred, mejor_ci
 
-# Dibujar las ventas y sus predicciones
-# def graficar_predicciones(valores_reales, test, nombre_modelo, pred, ci, color='b'):
-#     fig, ax = plt.subplots(figsize=(10, 3))  # ✅ Crear figura y eje explícitamente
-#     ax.plot(valores_reales.index, valores_reales.values, 'k-o', label='Real')
-#     ax.plot(test.index, pred.values, f'{color}--', label=nombre_modelo)
-#     if ci is not None:
-#         ax.fill_between(test.index, ci.iloc[:, 0], ci.iloc[:, 1], color=color, alpha=0.3)
-#     ax.set_title(f'{nombre_modelo}: Predicción')
-#     ax.set_ylabel('Cantidad')
-#     ax.legend()
-#     ax.grid(True)
-#     return fig
-
 # Predecir
 def ajustar_modelo(datos, periodo_estacional):
     if len(datos) < 2 * periodo_estacional:
@@ -212,14 +218,12 @@ def predecir(
     fecha_objetivo,
     codigo_art=None,
     regresores=['Precio', 'Precio_Costo', 'Ganancia'],
-    forward_fill_regresores=False,
-    graficar=False
-):
+    forward_fill_regresores=False):
 
     fecha_objetivo = pd.to_datetime(fecha_objetivo)
     fecha_mes = fecha_objetivo.to_period('M').to_timestamp()
 
-    # Filtrar por código si se especifica
+    # Filtrar por descripción si se especifica
     if codigo_art:
         ventas_df = ventas_df[ventas_df['Descripcion_Art'] == codigo_art]
         if ventas_df.empty:
@@ -407,17 +411,11 @@ def predecir(
     else:
         raise ValueError("Modelo no reconocido por la función de selección.")
 
-    # --- Graficar si se solicita ---
-    # figura = None
-    # if graficar:
-    #     figura = graficar_predicciones(valores_reales, test_plot, mejor_nombre, pred_plot, ci_plot, color='b') 
-
     return {
         'modelo': mejor_nombre,
         'prediccion': prediccion['prediccion'],
         'min': prediccion['intervalo'][0],
         'max': prediccion['intervalo'][1],
-        # 'figura': figura
     }
 
 

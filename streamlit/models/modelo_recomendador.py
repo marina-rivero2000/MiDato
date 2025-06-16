@@ -1,15 +1,28 @@
+# Librerias
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from mlxtend.preprocessing import TransactionEncoder
 from mlxtend.frequent_patterns import apriori, association_rules
 
 # Cargar datos
-def cargar_datos(ventas, articulos):
-    # Cargar las ventas
-    # ventas = pd.read_csv('data/ventas.csv', usecols=['Codigo_Fac', 'Año', 'Codigo_Art', 'Descripcion_Art'])
+# def cargar_datos(ventas, articulos):
+#     # Cargar las ventas
+#     ventas = pd.read_csv('data/ventas.csv', usecols=['Codigo_Fac', 'Año', 'Codigo_Art', 'Descripcion_Art'])
+#     ventas['Codigo_Art'] = ventas['Codigo_Art'].astype(str)
+#     # Cargar los artículos
+#     articulos = pd.read_csv('data/articulos2.csv', usecols=['Codigo_Art', 'Familia'])
+#     articulos['Codigo_Art'] = articulos['Codigo_Art'].astype(str)
+#     # Selector múltiple de productos
+#     mapeo = dict(zip(articulos['Codigo_Art'], articulos['Familia']))
+#     ventas['Familia'] = ventas['Codigo_Art'].map(mapeo)
+#     ventas.dropna(subset=['Familia'], inplace=True)
+#     return ventas
+
+# Preparar los datos
+def preparar_datos(ventas, articulos):
+    # Cambiar el tipo de dato de 'Codigo_Art' a string
     ventas['Codigo_Art'] = ventas['Codigo_Art'].astype(str)
     # Cargar los artículos
-    # articulos = pd.read_csv('data/articulos2.csv', usecols=['Codigo_Art', 'Familia'])
     articulos['Codigo_Art'] = articulos['Codigo_Art'].astype(str)
     # Selector múltiple de productos
     mapeo = dict(zip(articulos['Codigo_Art'], articulos['Familia']))
@@ -19,14 +32,14 @@ def cargar_datos(ventas, articulos):
 
 # Entrenar el modelo
 def entrenar_modelo(ventas, soporte_minimo=0.02):
-    #Agrupamos las transacciones por código de factura y año y creamos una lista de familias asegurando que no haya duplicados
+    # Agrupar las transacciones por código de factura y año y creamos una lista de familias asegurando que no haya duplicados
     transacciones = (ventas.groupby(['Codigo_Fac', 'Año'])['Familia'].apply(lambda fams: list(dict.fromkeys(fams))).tolist())
-    # Separamos el 80% de las transacciones para entrenamiento y el 20% para test
+    # Separar el 80% de las transacciones para entrenamiento y el 20% para test
     x_train, x_test = train_test_split(transacciones, test_size=0.2, random_state=42)
-    # Convertimos todos los elementos de las transacciones de entrenamiento y test a string
+    # Convertir todos los elementos de las transacciones de entrenamiento y test a string
     x_train = [[str(f) for f in compra] for compra in x_train]
     x_test  = [[str(f) for f in compra] for compra in x_test]
-    # Aplicamos el one-hot encoding a las transacciones de entrenamiento
+    # Aplicar el one-hot encoding a las transacciones de entrenamiento
     encoder = TransactionEncoder()
     encoder_ary = encoder.fit(x_train).transform(x_train)
     df_train = pd.DataFrame(encoder_ary, columns=encoder.columns_)
@@ -56,7 +69,7 @@ def recomendar_reglas(cesta, reglas, top_n):
 
 # Recomendador
 def recomendar_integrado(cesta, reglas_estrictas, reglas_no_estrictas, populares, top_n=2):
-    # reglas estrictas
+    # Reglas estrictas
     recomendaciones_estrictas = recomendar_reglas(cesta, reglas_estrictas, top_n)
     if recomendaciones_estrictas:
         return recomendaciones_estrictas

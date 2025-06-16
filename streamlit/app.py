@@ -1,19 +1,13 @@
-# Home.py
-
+# Librerías
 import streamlit as st
 from PIL import Image
 import base64
 from io import BytesIO
 
-
+# Configuración inicial de la página
 st.set_page_config(page_title="Inicio", layout="centered")
 
-# Cargar imagen local y convertirla a base64
-image = Image.open("logo.png")  # Asegúrate que esté en la misma carpeta que este script
-buffered = BytesIO()
-image.save(buffered, format="PNG")
-img_b64 = base64.b64encode(buffered.getvalue()).decode()
-
+# Estilo personalizado para la página
 st.markdown(
     """
     <style>     
@@ -33,6 +27,7 @@ def get_base64_image(image_path):
 
 img_b64 = get_base64_image("logo.png")
 
+# Título y logo de la aplicación
 st.markdown(f"""
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h1 style="color: #004d87 ;">🏠 Bienvenid@</h1>
@@ -40,6 +35,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
+# Mensaje de bienvenida
 st.markdown("""
 Usa el menú de la izquierda para navegar a:
 
