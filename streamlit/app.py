@@ -3,6 +3,7 @@ import streamlit as st
 from PIL import Image
 import base64
 from io import BytesIO
+import os
 
 # Configuración inicial de la página
 st.set_page_config(page_title="Inicio", layout="centered")
