@@ -1,1 +1,3 @@
 .MiDato
+__pycache__/
+*.pyc
