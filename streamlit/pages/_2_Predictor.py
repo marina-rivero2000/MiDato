@@ -144,8 +144,7 @@ with col_mes:
 # Seleccionar artículo
 with col_art:
     lista_articulos = ventas_df["Descripcion_Art"].unique()
-    lista_articulos = sorted([str(item) for item in lista_articulos])
-    opciones = ["Todos"] + lista_articulos
+    opciones = ["Todos"] + lista_articulos.tolist()
     valor_art = st.session_state.sel_art if st.session_state.sel_art in opciones else "Todos"
     index_art = opciones.index(valor_art)
     codigo_art = st.selectbox("Selecciona un artículo", opciones, index=index_art, key="sel_art")
@@ -171,6 +170,7 @@ if boton_pred:
                 ventas_df=ventas_df,
                 fecha_objetivo=fecha_objetivo,
                 codigo_art=None if codigo_art == "Todos" else codigo_art,
+                graficar=True,
                 forward_fill_regresores=True
             )
     except Exception as e:
@@ -193,6 +193,9 @@ if st.session_state.resultado:
         st.metric(label="Valor máximo (95%)", value=f"{maximo:.0f}")
     
     st.info(f"Predicción generada por el modelo {modelo}.")
+
+    if 'figura' in resultado and resultado['figura'] is not None:
+        resultado['figura']
 
 st.markdown("---")
 st.caption("Aplicación desarrollada con Streamlit | Modelo de series temporales (Prophet, SARIMA, ETS)")

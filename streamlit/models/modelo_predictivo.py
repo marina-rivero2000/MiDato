@@ -20,11 +20,15 @@ import matplotlib.pyplot as plt
 #     ventas = ventas.dropna(subset=['Descripcion_Art', 'Codigo_Art'])
 #     return ventas
 
-def preparar_datos(ventas):
+def preparar_datos(ventas, min_meses=25):
     # Transformar la columna 'Mes_Año' en índice
     ventas.set_index('Mes_Año', inplace=True)
     # Eliminar las ventas que no tienen código o descripción
     ventas = ventas.dropna(subset=['Descripcion_Art', 'Codigo_Art'])
+    # Agrupar por artículo y filtrar los que tienen al menos min_meses
+    conteos = ventas.groupby('Codigo_Art').size()
+    codigos_validos = conteos[conteos >= min_meses].index
+    ventas = ventas[ventas['Codigo_Art'].isin(codigos_validos)]
     return ventas
 
 # Agrupar las ventas
@@ -202,6 +206,14 @@ def evaluar_y_seleccionar_mejor_modelo_completo(modelos):
     mejor_ci = mejor_fila['ci']
     return mejor_modelo, mejor_pred, mejor_ci
 
+def graficar_predicciones(valores_reales):
+    fig, ax = plt.subplots(figsize=(10, 3)) 
+    ax.plot(valores_reales.index, valores_reales.values, 'k-o', label='Real')
+    ax.set_title('Ventas Mensuales')
+    ax.set_ylabel('Cantidad')
+    ax.grid(True)
+    return fig
+
 # Predecir
 def ajustar_modelo(datos, periodo_estacional):
     if len(datos) < 2 * periodo_estacional:
@@ -218,6 +230,7 @@ def predecir(
     fecha_objetivo,
     codigo_art=None,
     regresores=['Precio', 'Precio_Costo', 'Ganancia'],
+    graficar=True,
     forward_fill_regresores=False):
 
     fecha_objetivo = pd.to_datetime(fecha_objetivo)
@@ -411,11 +424,17 @@ def predecir(
     else:
         raise ValueError("Modelo no reconocido por la función de selección.")
 
+    if graficar:
+        fig = graficar_predicciones(valores_reales)  
+    else:
+        fig = None
+
     return {
         'modelo': mejor_nombre,
         'prediccion': prediccion['prediccion'],
         'min': prediccion['intervalo'][0],
         'max': prediccion['intervalo'][1],
+        'figura': fig
     }
 
 
