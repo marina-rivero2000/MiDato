@@ -17,3 +17,32 @@ Para mí, este proyecto no es solo una solución técnica, es personal. Nació d
 
 A diferencia de herramientas costosas y genéricas, MiDato es accesible y está pensada desde la realidad del pequeño comercio.
 Con MiDato, la ciencia de datos es una aliada del comercio local y cualquier tienda, por pequeña que sea, toma decisiones como una gran empresa. Con datos, no con suerte.
+
+# Streamlit App con Modelos de Recomendación y Predicción
+
+Este proyecto consiste en una aplicación web desarrollada con [Streamlit](https://streamlit.io/) que integra dos modelos de machine learning:
+
+- **Modelo de Recomendación:** Sugerencias personalizadas basadas en tickets de compra.
+- **Modelo de Predicción:** Predicción de ventas mensuales a partir de artículos introducidos por el usuario.
+
+## Demo
+
+Puedes ejecutar la aplicación localmente con el siguiente comando:
+
+```bash
+streamlit run app.py
+```
+
+## Estructura del proyecto
+
+📁 streamlit/
+│
+├── app.py  
+├── models/
+│ ├── modelo_recomendador.py
+│ └── modelo_predictivo.py
+├── pages/
+│ ├── \_1_Recomendador.py
+│ └── \_2_Predictor.py
+├── requirements.txt  
+└── README.md
